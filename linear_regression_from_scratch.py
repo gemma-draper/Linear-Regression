@@ -27,9 +27,9 @@ class LinearRegression:
             # update the weight and bias
         pass
 
-    def predict(self):
-        # calculate y_hat
-        pass
+    def predict(self, X):
+        # calculate y_pred
+        return np.matmul(X, self.W) + self.b
 
     def _calc_MSE_loss(self, y_pred, y):
         """
