@@ -14,7 +14,7 @@ X_std = np.std(X, axis=0)
 X  = (X - X_mean)/X_std
 
 class LinearRegression:
-    def __init__(self, n_features=13):
+    def __init__(self, n_features):
         # assign random params
         self.W = np.random.randn(n_features)
         self.b = np.random.randn()
@@ -22,7 +22,7 @@ class LinearRegression:
     
     def fit(self, X, y, epochs=32):
         losses = []
-        for epoch in epochs:
+        for epoch in range(epochs):
             learning_rate = 0.001
             y_pred = self.predict(X) # make predictions
             loss = self._calc_MSE_loss(y_pred, y) # compute the loss
@@ -57,3 +57,9 @@ class LinearRegression:
         grad_b = 2 * np.mean(y_pred - y)
         grad_W = 2 * np.mean(np.matmul((y_pred - y), X))
         return grad_W, grad_b
+
+
+model = LinearRegression(n_features=X.shape[1])
+model.fit(X,y)
+predictions = model.predict(X)
+# %%
