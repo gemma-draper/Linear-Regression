@@ -21,6 +21,7 @@ class DataLoader:
         self.batch(X, y) # batch the data
 
     def batch(self, X, y, batch_size=16):
+        X, y = self._shuffle(X, y)
         self.batches = []
         idx = 0
         while idx < len(X):
@@ -30,6 +31,11 @@ class DataLoader:
 
     def __len__(self):
         return len(self.batches)
+    
+    def _shuffle(self, X, y):
+        X_and_y = np.c_[X, y]
+        np.random.shuffle(X_and_y)
+        return X_and_y[:, :-1], X_and_y[:, -1]
 
     def __getitem__(self, idx):
         return self.batches[idx]
