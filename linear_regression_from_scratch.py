@@ -28,7 +28,9 @@ class LinearRegression:
         pass
 
     def predict(self, X):
-        # calculate y_pred
+        """
+        Calculate y_pred
+        """
         return np.matmul(X, self.W) + self.b
 
     def _calc_MSE_loss(self, y_pred, y):
@@ -37,6 +39,14 @@ class LinearRegression:
         """
         return np.mean((y_pred-y)**2)
 
-    def _calc_gradients(self):
+    def _calc_gradients(self, X, y):
+        """
+        Calculate and return gradients of W and b.
+        """
         # calculate gradient of weight and bias
+        y_pred = self.predict(X)
+        grad_b = 2 * np.mean(y_pred - y)
+        grad_W = 2 * np.mean(np.matmul((y_pred - y), X))
+        return grad_W, grad_b
+
         pass
