@@ -5,13 +5,34 @@ from matplotlib import pyplot as plt
 
 X, y = datasets.load_boston(return_X_y=True)
 
-print(X.shape)
-print(y.shape)
+# print(X.shape)
+# print(y.shape)
 
 # normalise X
 X_mean = np.mean(X, axis=0)
 X_std = np.std(X, axis=0)
 X  = (X - X_mean)/X_std
+
+class DataLoader:
+    """
+    Data loader class: splits data into mini-batches.
+    """
+    def __init__(self, X, y):
+        self.batch(X, y) # batch the data
+
+    def batch(self, X, y, batch_size=16):
+        self.batches = []
+        idx = 0
+        while idx < len(X):
+            batch = (X[idx:idx+batch_size], y[idx:idx+batch_size])
+            self.batches.append(batch)
+            idx += batch_size
+
+    def __len__(self):
+        return len(self.batches)
+
+    def __getitem__(self, idx):
+        return self.batches[idx]
 
 class LinearRegression:
     def __init__(self, n_features):
@@ -22,16 +43,19 @@ class LinearRegression:
     
     def fit(self, X, y, epochs=32):
         losses = []
-        for epoch in range(epochs):
-            learning_rate = 0.001
-            y_pred = self.predict(X) # make predictions
-            loss = self._calc_MSE_loss(y_pred, y) # compute the loss
-            losses.append(loss)
+        learning_rate = 0.001
+        batched_data = DataLoader(X, y)
 
-            grad_W, grad_b = self._calc_gradients(X, y) # compute gradients 
-            self.W -= learning_rate * grad_W # update the weight 
-            self.b -= learning_rate * grad_b # update the bias 
-        
+        for epoch in range(epochs):
+            loss_this_epoch = []
+            for X_batch, y_batch in batched_data:
+                y_pred = self.predict(X_batch) # make predictions
+                loss = self._calc_MSE_loss(y_pred, y_batch) # compute the loss
+                loss_this_epoch.append(loss)
+                grad_W, grad_b = self._calc_gradients(X_batch, y_batch) # compute gradients 
+                self.W -= learning_rate * grad_W # update the weight 
+                self.b -= learning_rate * grad_b # update the bias 
+            losses.append(np.mean(loss_this_epoch))
         plt.plot(losses) # plot the loss for each epoch
         plt.show()
         
@@ -59,6 +83,8 @@ class LinearRegression:
         return grad_W, grad_b
 
 
+
+#%%
 model = LinearRegression(n_features=X.shape[1])
 model.fit(X,y)
 predictions = model.predict(X)
