@@ -13,8 +13,10 @@ X_std = np.std(X, axis=0)
 X  = (X - X_mean)/X_std
 
 class LinearRegression:
-    def __init__(self) -> None:
+    def __init__(self, n_features=13):
         # assign random params
+        self.W = np.random.randn(n_features)
+        self.b = np.random.randn()
         pass
     
     def fit(self):
