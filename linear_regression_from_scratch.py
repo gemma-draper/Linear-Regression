@@ -31,9 +31,11 @@ class LinearRegression:
         # calculate y_hat
         pass
 
-    def _calc_MSE_loss(self):
-        # calculate loss 
-        pass
+    def _calc_MSE_loss(self, y_pred, y):
+        """
+        Calculates the mean squared error loss.
+        """
+        return np.mean((y_pred-y)**2)
 
     def _calc_gradients(self):
         # calculate gradient of weight and bias
