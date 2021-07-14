@@ -2,6 +2,7 @@
 from sklearn import datasets
 import numpy as np
 from matplotlib import pyplot as plt
+
 X, y = datasets.load_boston(return_X_y=True)
 
 print(X.shape)
@@ -19,13 +20,21 @@ class LinearRegression:
         self.b = np.random.randn()
         pass
     
-    def fit(self):
-        # for epoch in epochs:
-            # make predictions
-            # compute the loss
-            # compute gradient of the loss hyperplane
-            # update the weight and bias
-        pass
+    def fit(self, X, y, epochs=32):
+        losses = []
+        for epoch in epochs:
+            learning_rate = 0.001
+            y_pred = self.predict(X) # make predictions
+            loss = self._calc_MSE_loss(y_pred, y) # compute the loss
+            losses.append(loss)
+
+            grad_W, grad_b = self._calc_gradients(X, y) # compute gradients 
+            self.W -= learning_rate * grad_W # update the weight 
+            self.b -= learning_rate * grad_b # update the bias 
+        
+        plt.plot(losses) # plot the loss for each epoch
+        plt.show()
+        
 
     def predict(self, X):
         """
@@ -48,5 +57,3 @@ class LinearRegression:
         grad_b = 2 * np.mean(y_pred - y)
         grad_W = 2 * np.mean(np.matmul((y_pred - y), X))
         return grad_W, grad_b
-
-        pass
