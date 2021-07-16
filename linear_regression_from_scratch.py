@@ -23,14 +23,14 @@ def test_train_split(X, y, test_size=0.2):
         X = np.delete(X, random_number_gen, axis=0)
         y = np.delete(y, random_number_gen, axis=0)
         idx += 1
-    
-    return X, np.array(X_test), y, np.array(y_test)
-​
+        return X, np.array(X_test), y, np.array(y_test)
+
+
+# generate training, evaluation and test datasets.
 X_train, X_test, y_train, y_test = test_train_split(X, y)
-X_train, X_val, y_train, y_val = test_train_split(X_train, y_train)
+X_train, X_eval, y_train, y_eval = test_train_split(X_train, y_train)
 
-#normalise dataset
-
+# normalise the training data
 X_mean = np.mean(X_train, axis=0)
 X_std = np.std(X_train, axis=0)
 X_train = (X_train - X_mean) / X_std
@@ -43,21 +43,28 @@ class DataLoader:
         self.batch(X, y) # batch the data
 
     def batch(self, X, y, batch_size=16):
-        X, y = self._shuffle(X, y)
+        """
+        Shuffles and splits X and y data into batches.
+        Default batch size is 16 examples.
+        """
+        X, y = self._shuffle(X, y) # shuffle the data
         self.batches = []
         idx = 0
         while idx < len(X):
             batch = (X[idx:idx+batch_size], y[idx:idx+batch_size])
             self.batches.append(batch)
             idx += batch_size
-
-    def __len__(self):
-        return len(self.batches)
-    
+ 
     def _shuffle(self, X, y):
+        """
+        Private method. Shuffles the X and y arrays given.
+        """
         X_and_y = np.c_[X, y]
         np.random.shuffle(X_and_y)
         return X_and_y[:, :-1], X_and_y[:, -1]
+    
+    def __len__(self):
+        return len(self.batches)
 
     def __getitem__(self, idx):
         return self.batches[idx]
@@ -67,13 +74,10 @@ class LinearRegression:
         # assign random params
         self.W = np.random.randn(n_features)
         self.b = np.random.randn()
-        pass
     
-    def fit(self, X, y, epochs=32):
+    def fit(self, X, y, epochs=32, learning_rate=0.001):
         losses = []
-        learning_rate = 0.001
-        batched_data = DataLoader(X, y)
-
+        batched_data = DataLoader(X, y) # batch the data
         for epoch in range(epochs):
             loss_this_epoch = []
             for X_batch, y_batch in batched_data:
@@ -83,8 +87,9 @@ class LinearRegression:
                 grad_W, grad_b = self._calc_gradients(X_batch, y_batch) # compute gradients 
                 self.W -= learning_rate * grad_W # update the weight 
                 self.b -= learning_rate * grad_b # update the bias 
-            losses.append(np.mean(loss_this_epoch))
-        plt.plot(losses) # plot the loss for each epoch
+            losses.append(np.mean(loss_this_epoch)) # append the mean loss for this epoch
+        
+        plt.plot(losses) # plot the mean loss against epoch number
         plt.show()
         
     def predict(self, X):
@@ -113,6 +118,6 @@ class LinearRegression:
 
 #%%
 model = LinearRegression(n_features=X.shape[1])
-model.fit(X,y)
-predictions = model.predict(X)
+model.fit(X_train,y_train)
+# predictions = model.predict(X)
 # %%
