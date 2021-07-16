@@ -10,3 +10,6 @@ A home-made implementation of a sklearn-like linear regressor.
 
 ## DataLoader class features:
 * Shuffle and split data into mini-batches
+
+## Other capabilities:
+* Split data into test and training sets
