@@ -5,13 +5,35 @@ from matplotlib import pyplot as plt
 
 X, y = datasets.load_boston(return_X_y=True)
 
-# print(X.shape)
-# print(y.shape)
+def test_train_split(X, y, test_size=0.2):
+    """
+    Split X and y data into traing set and test set.
+    The default test set proportion is 0.2.
+    Returns X_train, X_test, y_train, y_test
+    """
+    idx = 0
+    length_of_X = len(X)
+    y_test = []
+    X_test = []
+    
+    while  idx < length_of_X*test_size:
+        random_number_gen = np.random.randint(low=0, high=len(X))
+        y_test.append(y[random_number_gen])
+        X_test.append(X[random_number_gen])
+        X = np.delete(X, random_number_gen, axis=0)
+        y = np.delete(y, random_number_gen, axis=0)
+        idx += 1
+    
+    return X, np.array(X_test), y, np.array(y_test)
+​
+X_train, X_test, y_train, y_test = test_train_split(X, y)
+X_train, X_val, y_train, y_val = test_train_split(X_train, y_train)
 
-# normalise X
-X_mean = np.mean(X, axis=0)
-X_std = np.std(X, axis=0)
-X  = (X - X_mean)/X_std
+#normalise dataset
+
+X_mean = np.mean(X_train, axis=0)
+X_std = np.std(X_train, axis=0)
+X_train = (X_train - X_mean) / X_std
 
 class DataLoader:
     """
@@ -65,7 +87,6 @@ class LinearRegression:
         plt.plot(losses) # plot the loss for each epoch
         plt.show()
         
-
     def predict(self, X):
         """
         Calculate y_pred
