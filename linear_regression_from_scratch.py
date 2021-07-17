@@ -28,12 +28,14 @@ def test_train_split(X, y, test_size=0.2):
 
 # generate training, evaluation and test datasets.
 X_train, X_test, y_train, y_test = test_train_split(X, y)
-X_train, X_eval, y_train, y_eval = test_train_split(X_train, y_train)
+X_train, X_val, y_train, y_val = test_train_split(X_train, y_train)
 
 # normalise the training data
 X_mean = np.mean(X_train, axis=0)
 X_std = np.std(X_train, axis=0)
 X_train = (X_train - X_mean) / X_std
+# normalise the validation data
+X_val = (X_val - X_mean) / X_std
 
 class DataLoader:
     """
@@ -75,49 +77,76 @@ class LinearRegression:
         self.W = np.random.randn(n_features)
         self.b = np.random.randn()
     
-    def fit(self, X, y, epochs=32, learning_rate=0.001):
-        losses = []
-        batched_data = DataLoader(X, y) # batch the data
+    def fit(self, X, y, X_val, y_val, epochs=100, learning_rate=0.001, plot=True):
+        """
+        Fit linear regression model to X and y data.
+        """
+        train_loss = []
+        val_loss = []
+
+        batched_data = DataLoader(X, y) # batch the training data
+
         for epoch in range(epochs):
-            loss_this_epoch = []
+            train_loss_this_epoch = []
+            val_loss_this_epoch = []
+
             for X_batch, y_batch in batched_data:
-                y_pred = self.predict(X_batch) # make predictions
-                loss = self._calc_MSE_loss(y_pred, y_batch) # compute the loss
-                loss_this_epoch.append(loss)
-                grad_W, grad_b = self._calc_gradients(X_batch, y_batch) # compute gradients 
-                self.W -= learning_rate * grad_W # update the weight 
-                self.b -= learning_rate * grad_b # update the bias 
-            losses.append(np.mean(loss_this_epoch)) # append the mean loss for this epoch
-        
-        plt.plot(losses) # plot the mean loss against epoch number
-        plt.show()
-        
+                y_hat, train_loss_this_epoch = self._get_loss(X_batch, y_batch, train_loss_this_epoch)
+                val_loss_this_epoch = self._get_loss(X_val, y_val, val_loss_this_epoch, return_y_hat=False)
+                grad_W, grad_b = self._calc_gradients(X_batch, y_batch, y_hat) # compute gradients 
+                self._update_params(grad_W, grad_b, learning_rate) # update parameters
+            
+            
+            val_loss.append(np.mean(val_loss_this_epoch))
+            train_loss.append(np.mean(train_loss_this_epoch)) # append the mean loss for this epoch
+                        
+        if plot:
+
+            plt.plot(train_loss, label="Training set")
+            plt.plot(val_loss, label="Validation set")
+            plt.legend()
+            plt.xlabel("Epoch")
+            plt.ylabel("MSE loss")
+            plt.show()
+                
     def predict(self, X):
         """
-        Calculate y_pred
+        Calculate y_hat
         """
         return np.matmul(X, self.W) + self.b
+    
+    def _get_loss(self, X, y, loss_this_epoch, return_y_hat=True):
+        y_hat = self.predict(X) # make predictions
+        loss = self._calc_MSE_loss(y_hat, y) # compute the loss
+        loss_this_epoch.append(loss)
+        if return_y_hat:
+            return y_hat, loss_this_epoch
+        return loss_this_epoch
 
-    def _calc_MSE_loss(self, y_pred, y):
+    def _update_params(self, grad_W, grad_b, learning_rate):
+        self.W -= learning_rate * grad_W # update the weight 
+        self.b -= learning_rate * grad_b # update the bias 
+
+    def _calc_MSE_loss(self, y_hat, y):
         """
         Calculates the mean squared error loss.
         """
-        return np.mean((y_pred-y)**2)
+        return np.mean((y_hat-y)**2)
 
-    def _calc_gradients(self, X, y):
+    def _calc_gradients(self, X, y, y_hat):
         """
         Calculate and return gradients of W and b.
         """
         # calculate gradient of weight and bias
-        y_pred = self.predict(X)
-        grad_b = 2 * np.mean(y_pred - y)
-        grad_W = 2 * np.mean(np.matmul((y_pred - y), X))
+        grad_b = 2 * np.mean(y_hat - y)
+        grad_W = 2 * np.mean(np.matmul((y_hat - y), X))
         return grad_W, grad_b
+
 
 
 
 #%%
 model = LinearRegression(n_features=X.shape[1])
-model.fit(X_train,y_train)
-# predictions = model.predict(X)
+model.fit(X_train, y_train, X_val, y_val)
+
 # %%
