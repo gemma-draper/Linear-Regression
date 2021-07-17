@@ -107,7 +107,7 @@ class LinearRegression:
         self.W = np.random.randn(n_features)
         self.b = np.random.randn()
     
-    def fit(self, X, y, X_val, y_val, epochs=100, learning_rate=0.001, plot=True):
+    def fit(self, X, y, X_val, y_val, epochs=10000, learning_rate=0.001, plot=True, accuracy=0.001):
         """
         Fit linear regression model to X and y data.
         """
@@ -125,11 +125,27 @@ class LinearRegression:
                 val_loss_this_epoch = self._compute_loss(X_val, y_val, val_loss_this_epoch, return_y_hat=False)
                 grad_W, grad_b = self._calc_gradients(X_batch, y_batch, y_hat) # compute gradients 
                 self._update_params(grad_W, grad_b, learning_rate) # update parameters
-            
-            
+                
             val_loss.append(np.mean(val_loss_this_epoch))
             train_loss.append(np.mean(train_loss_this_epoch)) # append the mean loss for this epoch
-                        
+
+            
+            # Early stopping
+            if epoch > 1 and abs((val_loss[-2] - val_loss[-1]) / val_loss[-1]) < accuracy:
+                print(f"Fit complete after {epoch+1} epochs.",
+                    f"Training loss: {train_loss[-1]}",
+                    f"Validation loss: {val_loss[-1]}",
+                    f"Validation loss converged with an accuracy of {accuracy*100}%",
+                    sep="\n")
+                break
+            elif epoch > 1 and val_loss[-1] > val_loss[-2]:
+                print(f"Fit complete after {epoch+1} epochs.",
+                    f"Training loss: {train_loss[-1]}",
+                    f"Validation loss: {val_loss[-1]}",
+                    f"Fit stopped as validation set performance was getting worse.",
+                    sep="\n")
+                break                        
+        
         if plot:
             plt.plot(train_loss, label="Training set")
             plt.plot(val_loss, label="Validation set")
