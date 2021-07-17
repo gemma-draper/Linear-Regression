@@ -9,7 +9,11 @@ def test_train_split(X, y, test_size=0.2):
     """
     Split X and y data into traing set and test set.
     The default test set proportion is 0.2.
-    Returns X_train, X_test, y_train, y_test
+    Inputs: 
+        X: 2D feature array.
+        y: 1D label array.
+    Outputs: 
+        X_train, X_test, y_train, y_test
     """
     idx = 0
     length_of_X = len(X)
@@ -30,24 +34,35 @@ def test_train_split(X, y, test_size=0.2):
 X_train, X_test, y_train, y_test = test_train_split(X, y)
 X_train, X_val, y_train, y_val = test_train_split(X_train, y_train)
 
-# normalise the training data
+# standardise the training data
 X_mean = np.mean(X_train, axis=0)
 X_std = np.std(X_train, axis=0)
 X_train = (X_train - X_mean) / X_std
-# normalise the validation data
+# standardise the validation data
 X_val = (X_val - X_mean) / X_std
 
 class DataLoader:
     """
-    Data loader class: splits data into mini-batches.
+    Data loader class: suffles and splits data into mini-batches.
     """
     def __init__(self, X, y):
-        self.batch(X, y) # batch the data
+        """
+        Shuffle and batch the data.
+        Batched data is stored in self.batches list. 
+        Inputs: 
+            X: 2D feature array.
+            y: 1D label array.
+        """
+        self._batch(X, y)
 
-    def batch(self, X, y, batch_size=16):
+    def _batch(self, X, y, batch_size=16):
         """
         Shuffles and splits X and y data into batches.
         Default batch size is 16 examples.
+        Batched data is stored in self.batches list. 
+        Inputs: 
+            X: 2D feature array.
+            y: 1D label array.
         """
         X, y = self._shuffle(X, y) # shuffle the data
         self.batches = []
@@ -59,21 +74,36 @@ class DataLoader:
  
     def _shuffle(self, X, y):
         """
-        Private method. Shuffles the X and y arrays given.
+        Shuffles feature and label arrays.
+        Inputs: 
+            X: 2D feature array.
+            y: 1D label array.
+        Outputs:
+            X, y
+
         """
         X_and_y = np.c_[X, y]
         np.random.shuffle(X_and_y)
         return X_and_y[:, :-1], X_and_y[:, -1]
     
     def __len__(self):
+        """
+        Defines behaviour for calling len() of a class instance.
+        """
         return len(self.batches)
 
     def __getitem__(self, idx):
+        """
+        Defines behaviour for indexing a class instance.
+        """
         return self.batches[idx]
 
 class LinearRegression:
     def __init__(self, n_features):
-        # assign random params
+        """
+        Constructs linear regression model. 
+        Model is initialised with random weights and bias.
+        """
         self.W = np.random.randn(n_features)
         self.b = np.random.randn()
     
@@ -91,8 +121,8 @@ class LinearRegression:
             val_loss_this_epoch = []
 
             for X_batch, y_batch in batched_data:
-                y_hat, train_loss_this_epoch = self._get_loss(X_batch, y_batch, train_loss_this_epoch)
-                val_loss_this_epoch = self._get_loss(X_val, y_val, val_loss_this_epoch, return_y_hat=False)
+                y_hat, train_loss_this_epoch = self._compute_loss(X_batch, y_batch, train_loss_this_epoch)
+                val_loss_this_epoch = self._compute_loss(X_val, y_val, val_loss_this_epoch, return_y_hat=False)
                 grad_W, grad_b = self._calc_gradients(X_batch, y_batch, y_hat) # compute gradients 
                 self._update_params(grad_W, grad_b, learning_rate) # update parameters
             
@@ -101,7 +131,6 @@ class LinearRegression:
             train_loss.append(np.mean(train_loss_this_epoch)) # append the mean loss for this epoch
                         
         if plot:
-
             plt.plot(train_loss, label="Training set")
             plt.plot(val_loss, label="Validation set")
             plt.legend()
@@ -111,11 +140,15 @@ class LinearRegression:
                 
     def predict(self, X):
         """
-        Calculate y_hat
+        Calculate label predictions, y_hat, for features X.
+        Input:
+            X: 2D feature array.
+        Output:
+            y_hat: 1D array of label predictions.
         """
         return np.matmul(X, self.W) + self.b
     
-    def _get_loss(self, X, y, loss_this_epoch, return_y_hat=True):
+    def _compute_loss(self, X, y, loss_this_epoch, return_y_hat=True):
         y_hat = self.predict(X) # make predictions
         loss = self._calc_MSE_loss(y_hat, y) # compute the loss
         loss_this_epoch.append(loss)
